@@ -3,6 +3,7 @@ const express = require('express');
 // Getting Routes
 
 const authRoutes = require('./src/routes/authRoutes');
+const postRoutes = require('./src/routes/postRoutes');
 
 
 const app = express();
@@ -12,6 +13,7 @@ app.use(express.urlencoded({ extended: true }));
 
 
 app.use('/api/auth', authRoutes);
+app.use('/api', postRoutes);
 
 PORT = process.env.PORT || 4000;
 
