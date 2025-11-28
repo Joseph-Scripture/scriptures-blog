@@ -28,7 +28,7 @@ async function signup(req, res) {
     // Generate JWT token for automatic login
     const token = jwt.sign(
       { userId: newUser.id, email: newUser.email },
-      process.env.JWT_SECRET,{ expiresIn: '1h' } // token valid for 1 hour
+      process.env.JWT_SECRET,{ expiresIn: '1h' } 
     );
 
     
@@ -50,26 +50,59 @@ async function signup(req, res) {
 
 
 
-async function login (req, res) {
-    const {email, password} = req.body;
-    try{
-        const user = await prisma.user.findUnique({where:{email}});
-        if(!user){
-            return res.status(400).json({message:"Invalid credentials"});
 
-        }
-        const isMatch = await bcrypt.compare(password, user.password);
-        if(!isMatch){
-            return res.status(400).json({message:"Invalid credentials"});
-            
-        }
-        const accessToken = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '15m' });
-        res.json({accessToken});
+async function login(req, res) {
+  const { email, password } = req.body;
 
-    }catch(err){
-        res.status(500).json({message:"Server error"})
+  try {
+    // 1. Find user by email
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid credentials" });
     }
-};
+
+    // 2. Compare password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    // 3. Create access token
+    const accessToken = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '15m' } 
+    );
+
+   
+    const refreshToken = jwt.sign(
+      { id: user.id },
+      process.env.REFRESH_TOKEN_SECRET,
+      { expiresIn: '7d' } 
+    );
+
+    
+    await prisma.refreshToken.create({
+      data: {
+        token: refreshToken,
+        userId: user.id,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      }
+    });
+
+    // 6. Send tokens in response
+    res.json({
+      message: "Login successful",
+      accessToken,
+      refreshToken
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+}
+
 module.exports = {
     signup,
     login
