@@ -4,6 +4,7 @@ const express = require('express');
 
 const authRoutes = require('./src/routes/authRoutes');
 const postRoutes = require('./src/routes/postRoutes');
+const commentRoutes = require('./src/routes/commentRoutes');
 
 
 const app = express();
@@ -14,6 +15,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/api/auth', authRoutes);
 app.use('/api', postRoutes);
+app.use('/api', commentRoutes)
 
 PORT = process.env.PORT || 4000;
 

@@ -27,7 +27,7 @@ async function createPost(req, res) {
 
         res.status(201).json({
             message: `Post created successfully by ${post.author.username}`,
-            username:post.author.username,
+            
             post
         });
     } catch (err) {
@@ -44,8 +44,13 @@ async function getAllPosts(req, res) {
     try {
         const posts = await prisma.post.findMany({
             include: {
-                author: true, //  show author info
-            },
+                author: {
+                    select: {
+                        username: true,
+                        email: true
+                    }
+                }
+            }
         });
 
         res.json(posts);
@@ -54,41 +59,80 @@ async function getAllPosts(req, res) {
         res.status(500).json({ message: "Server error" });
     }
 }
+// 695904596
 
-// DELETE POST
-async function deletePost(req, res) {
+
+
+async function updatePost(req, res) {
     const { id } = req.params;
-    const userId = req.user.id;
+    const { title, content } = req.body;
 
     try {
-        // 1. Find the post
+        // 1. Make sure post exists
         const post = await prisma.post.findUnique({
-            where: { id: Number(id) },
+            where: { id: Number(id) }
         });
 
         if (!post) {
             return res.status(404).json({ message: "Post not found" });
         }
 
-        // 2. Check if user owns post
-        if (post.authorId !== userId) {
-            return res.status(403).json({ message: "Unauthorized" });
+        // 2. Check ownership
+        if (post.authorId !== req.user.userId) {
+            return res.status(403).json({ message: "Not allowed to update this post" });
         }
 
-        // 3. Delete post
-        await prisma.post.delete({
+        // 3. Update it
+        const updatedPost = await prisma.post.update({
             where: { id: Number(id) },
+            data: { title, content }
         });
 
-        res.json({ message: "Post deleted successfully" });
+        res.json({
+            message: "Post updated successfully",
+            post: updatedPost
+        });
+
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Server error" });
     }
 }
+async function deletePost(req, res) {
+    const { id } = req.params;
+
+    try {
+        // 1. Check if post exists
+        const post = await prisma.post.findUnique({
+            where: { id: Number(id) }
+        });
+
+        if (!post) {
+            return res.status(404).json({ message: "Post does not exist" });
+        }
+
+        // 2. Ownership check
+        if (post.authorId !== req.user.userId) {
+            return res.status(403).json({ message: "You are not allowed to delete this post" });
+        }
+
+        // 3. Delete post
+        await prisma.post.delete({
+            where: { id: Number(id) }
+        });
+
+        return res.status(200).json({ message: "Post deleted successfully" });
+
+    } catch (err) {
+        console.error("Delete error:", err);
+        return res.status(500).json({ message: "Server error" });
+    }
+}
+
 
 module.exports = {
     createPost,
     getAllPosts,
     deletePost,
+    updatePost,
 };

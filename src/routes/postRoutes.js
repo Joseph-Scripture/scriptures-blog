@@ -7,5 +7,6 @@ const router = Router();
 router.get('/posts',auth, postController.getAllPosts);
 router.post('/post',auth, postController.createPost);
 router.delete('/post/:id',auth, postController.deletePost);
+router.put('/post/:id', auth, postController.updatePost)
 
 module.exports = router;
