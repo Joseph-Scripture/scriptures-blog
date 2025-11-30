@@ -26,6 +26,14 @@ async function createComment(req, res) {
                 content,
                 postId: Number(postId),
                 authorId: userId
+            },
+            include:{
+                author:{
+                    select:{
+                        username: true,
+                    }
+                }
+
             }
         });
 
