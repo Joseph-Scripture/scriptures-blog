@@ -1,17 +1,38 @@
-const {Router} = require('express');
-const authController = require('../controllers/authController');
+const { Router } = require("express");
+const authController = require("../controllers/authController");
 const {
-    emailValidator,
-    passwordValidator,
-    nameValidator
-} = require('../middleware/vallidation');
-const vallidator = require('../middleware/vallidationHandler')
-
+  emailValidator,
+  passwordValidator,
+  nameValidator,
+} = require("../middleware/validation");
+const validationHandler = require("../middleware/validationHandler");
 
 const router = Router();
 
-router.post('/register', [emailValidator,passwordValidator,nameValidator],authController.signup);
-router.post('/login',[passwordValidator], authController.login);
-router.post('/logout', authController.logout);
+// REGISTER
+router.post(
+  "/register",
+  [
+    emailValidator,
+    passwordValidator,
+    nameValidator
+  ],
+  validationHandler,
+  authController.signup
+);
 
-module.exports = router
+// LOGIN
+router.post(
+  "/login",
+  [
+    emailValidator,
+    passwordValidator
+  ],
+  validationHandler,
+  authController.login
+);
+
+// LOGOUT
+router.post("/logout", authController.logout);
+
+module.exports = router;

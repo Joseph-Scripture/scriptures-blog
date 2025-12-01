@@ -7,6 +7,7 @@ async function signup(req, res) {
   const { username, password, email } = req.body;
 
   try {
+    
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
@@ -43,7 +44,7 @@ async function signup(req, res) {
     });
 
   } catch (err) {
-    console.error(err);
+    console.log(err);
     res.status(500).json({ message: "Server error" });
   }
 }
