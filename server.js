@@ -12,12 +12,18 @@ const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cors({
+    origin: '*',
+    methods:["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders:["content-Type", "Authorization"],
+    credentials:true
+}));
 
 
 app.use('/api/auth', authRoutes);
 app.use('/api', postRoutes);
 app.use('/api', commentRoutes)
-app.use(cors());
+
 
 PORT = process.env.PORT || 4000;
 

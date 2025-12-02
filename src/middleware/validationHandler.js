@@ -8,7 +8,7 @@ module.exports = (req, res, next) => {
   if (!errors.isEmpty()) {
     const firstError = errors.array()[0];
     return res.status(400).json({
-      field:firstError.params,
+      field:firstError.param,
       message: firstError.msg,
       value:firstError.value
     });
