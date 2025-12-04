@@ -70,6 +70,46 @@ async function getAllPosts(req, res) {
     }
 }
 
+async function getSinglePost(req, res) {
+    const { id } = req.params;
+
+    try {
+        const post = await prisma.post.findUnique({
+            where: { id: Number(id) },
+            include: {
+                author: {
+                    select: {
+                        username: true,
+                        email: true,
+                        createdAt: true
+                    }
+                },
+                comments: {
+                    include: {
+                        author: {
+                            select: {
+                                username: true
+                            }
+                        }
+                    },
+                    orderBy: {
+                        createdAt: "desc"
+                    }
+                }
+            }
+        });
+
+        if (!post) {
+            return res.status(404).json({ message: "Post not found" });
+        }
+
+        res.json(post);
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+}
 
 
 async function updatePost(req, res) {
@@ -141,4 +181,5 @@ module.exports = {
     getAllPosts,
     deletePost,
     updatePost,
+    getSinglePost
 };
