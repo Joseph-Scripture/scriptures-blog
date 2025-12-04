@@ -52,11 +52,6 @@ async function getAllComments(req, res) {
     const { postId } = req.params;
 
     try {
-        // Validate postId
-        if (!postId) {
-            return res.status(400).json({ message: "Post ID is required" });
-        }
-
         // Fetch comments
         const comments = await prisma.comment.findMany({
             where: { postId: Number(postId) },
@@ -67,23 +62,19 @@ async function getAllComments(req, res) {
                         email: true
                     }
                 }
-            }
+            },
+            orderBy: { createdAt: 'asc' } // optional: oldest first
         });
 
-        if (comments.length === 0) {
-            return res.status(404).json({ message: "No comments found" });
-        }
-
-        return res.status(200).json({
-            message: "All comments retrieved",
-            comments
-        });
+        // Always return an array, even if empty
+        return res.status(200).json(comments);
 
     } catch (err) {
         console.error("Get comments error:", err);
         return res.status(500).json({ message: "Server error" });
     }
 }
+
 
 // update comment
 async function updateComment(req, res) {
