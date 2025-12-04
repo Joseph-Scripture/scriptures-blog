@@ -49,8 +49,18 @@ async function getAllPosts(req, res) {
                         username: true,
                         email: true
                     }
+                },
+                comments:{
+                    include:{
+                        author:{
+                            select:{username:true}
+                        }
+                    }
+
                 }
-            }
+                
+            },
+            
         });
 
         res.json(posts);
@@ -59,7 +69,6 @@ async function getAllPosts(req, res) {
         res.status(500).json({ message: "Server error" });
     }
 }
-// 695904596
 
 
 
