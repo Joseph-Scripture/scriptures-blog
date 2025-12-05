@@ -39,7 +39,10 @@ async function createComment(req, res) {
 
         return res.status(201).json({
             message: "Comment created successfully",
-            comment
+            comment:{
+                ...comment,
+                authorId:userId
+            }
         });
 
     } catch (err) {
