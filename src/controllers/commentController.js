@@ -52,7 +52,6 @@ async function getAllComments(req, res) {
     const { postId } = req.params;
 
     try {
-        // Fetch comments
         const comments = await prisma.comment.findMany({
             where: { postId: Number(postId) },
             include: {
@@ -63,11 +62,15 @@ async function getAllComments(req, res) {
                     }
                 }
             },
-            orderBy: { createdAt: 'asc' } // optional: oldest first
+            orderBy: { createdAt: 'asc' }
         });
 
-        // Always return an array, even if empty
-        return res.status(200).json(comments);
+        const enhancedComments = comments.map(c => ({
+            ...c,
+            authorId: c.authorId  
+        }));
+
+        return res.status(200).json({ comments: enhancedComments });
 
     } catch (err) {
         console.error("Get comments error:", err);
