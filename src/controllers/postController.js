@@ -43,6 +43,7 @@ async function createPost(req, res) {
 async function getAllPosts(req, res) {
     try {
         const posts = await prisma.post.findMany({
+            where: {published: true},
             include: {
                 author: {
                     select: {
@@ -176,10 +177,39 @@ async function deletePost(req, res) {
         return res.status(500).json({ message: "Server error" });
     }
 }
+async function publishPost(req, res) {
+    const { id } = req.params;
+
+    try {
+        // 1. Check if post exists
+        const post = await prisma.post.findUnique({
+            where: { id: Number(id) }
+        });
+
+        if (!post) {
+            return res.status(404).json({ message: "Post does not exist" });
+        }
+        // 2. Ownership check
+        if (post.authorId !== req.user.userId) {
+            return res.status(403).json({ message: "You are not allowed to publish this post" });
+        }
+        await prisma.post.update({
+            where: { id: Number(id) },
+            data: { published: true }
+        });
+
+        return res.status(200).json({ message: "Post published successfully", post });
+
+    } catch (err) {
+        console.error("Publish error:", err);
+        return res.status(500).json({ message: "Server error" });
+    }
+}
 module.exports = {
     createPost,
     getAllPosts,
     deletePost,
     updatePost,
-    getSinglePost
+    getSinglePost,
+    publishPost
 };
