@@ -86,6 +86,39 @@ async function getAllPosts(req, res) {
     }
 }
 
+// GET MY POSTS
+async function getMyPosts(req, res) {
+    const userId = req.user.userId;
+    try {
+        const posts = await prisma.post.findMany({
+            where: { authorId: userId },
+            include: {
+                author: {
+                    select: {
+                        username: true,
+                        email: true
+                    }
+                },
+                comments:{
+                    include:{
+                        author:{
+                            select:{username:true}
+                        }
+                    }
+                }
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        });
+
+        return res.status(200).json(posts);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+}
+
 async function getSinglePost(req, res) {
     const { id } = req.params;
 
@@ -240,6 +273,7 @@ async function publishPost(req, res) {
 module.exports = {
     createPost,
     getAllPosts,
+    getMyPosts,
     deletePost,
     updatePost,
     getSinglePost,
