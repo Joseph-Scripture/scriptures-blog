@@ -89,6 +89,12 @@ async function getAllPosts(req, res) {
 async function getSinglePost(req, res) {
     const { id } = req.params;
 
+    const cachedPost = await redisClient.get(`post:${id}`);
+    if (cachedPost) {
+        console.log("Serving from cache");
+        return res.status(200).json(JSON.parse(cachedPost));
+    }
+
     try {
         const post = await prisma.post.findUnique({
             where: { id: Number(id) },
@@ -118,6 +124,8 @@ async function getSinglePost(req, res) {
         if (!post) {
             return res.status(404).json({ message: "Post not found" });
         }
+
+        await Cache.cacheSinglePost(id);
 
         return res.status(200).json(post);
 

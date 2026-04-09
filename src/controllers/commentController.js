@@ -1,4 +1,6 @@
 const prisma = require('../prisma/client');
+const cache = require('../services/cacheServices');
+const redisClient = require('../redis/client');
 
 async function createComment(req, res) {
     const { content } = req.body;
@@ -36,6 +38,7 @@ async function createComment(req, res) {
 
             }
         });
+        await redisClient.del(`comments:${postId}`);
 
         return res.status(201).json({
             message: "Comment created successfully",
@@ -54,7 +57,12 @@ async function createComment(req, res) {
 async function getAllComments(req, res) {
     const { postId } = req.params;
 
+
     try {
+        const cachedComments = await redisClient.get(`comments:${postId}`);
+        if (cachedComments) {
+            return res.status(200).json({ comments: JSON.parse(cachedComments) });
+        }
         const comments = await prisma.comment.findMany({
             where: { postId: Number(postId) },
             include: {
@@ -72,6 +80,7 @@ async function getAllComments(req, res) {
             ...c,
             authorId: c.authorId  
         }));
+        await redisClient.set(`comments:${postId}`, JSON.stringify(enhancedComments), { EX: 60 * 60 });
 
         return res.status(200).json({ comments: enhancedComments });
 
@@ -114,6 +123,7 @@ async function updateComment(req, res) {
                 }
             }
         });
+        await redisClient.del(`comments:${comment.postId}`);
 
         return res.status(200).json({
             message: "Comment updated successfully",
@@ -148,6 +158,7 @@ async function deleteComment(req, res) {
         await prisma.comment.delete({
             where: { id: Number(id) }
         });
+        await redisClient.del(`comments:${comment.postId}`);
 
         return res.status(200).json({
             message: "Comment deleted successfully"
