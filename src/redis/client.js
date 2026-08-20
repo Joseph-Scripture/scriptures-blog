@@ -16,3 +16,8 @@ redisClient.on('error', (err) => {
 redisClient.connect().catch(console.error);
 
 module.exports = redisClient;
+
+
+
+
+// await client.disconnect();
